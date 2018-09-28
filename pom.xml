@@ -12,7 +12,7 @@
         <module>server</module>
         <module>client</module>
         <module>client-lite</module>
-        <module>protocol-handlers</module>
+        <module>protocol</module>
         <module>common</module>
     </modules>
 
