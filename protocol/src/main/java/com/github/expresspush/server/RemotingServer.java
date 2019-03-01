@@ -6,5 +6,5 @@ public interface RemotingServer {
 
     void shutdown();
 
-    void status();
+    String status();
 }

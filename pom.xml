@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github</groupId>
+    <groupId>com.github.expresspush</groupId>
     <artifactId>expresspush-java</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0</version>
@@ -14,15 +14,32 @@
         <module>client-lite</module>
         <module>protocol</module>
         <module>common</module>
+        <module>monitor</module>
     </modules>
 
     <properties>
         <netty.version>4.1.29.Final</netty.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.caucho</groupId>
+                <artifactId>hessian</artifactId>
+                <version>4.0.51</version>
+            </dependency>
+            <dependency>
+                <groupId>org.lz4</groupId>
+                <artifactId>lz4-java</artifactId>
+                <version>1.5.0</version>
+            </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
@@ -30,15 +47,39 @@
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-                <version>1.7.25</version>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>1.7.25</version>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
