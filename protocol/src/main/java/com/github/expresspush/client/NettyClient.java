@@ -2,13 +2,18 @@ package com.github.expresspush.client;
 
 import com.github.expresspush.Status;
 import com.github.expresspush.handler.RequestCommand;
+import com.github.expresspush.handler.SimpleMessageHandler;
+import com.github.expresspush.handler.local.SimpleDecoder;
+import com.github.expresspush.handler.local.SimpleEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -48,8 +53,11 @@ public class NettyClient {
             .handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
-                    //fixme add handlers
-
+                    ch.pipeline()
+                        .addLast("idle", new IdleStateHandler(0, 0, 60, TimeUnit.SECONDS))
+                        .addLast("encoder", new SimpleEncoder())
+                        .addLast("decoder", new SimpleDecoder())
+                        .addLast("messageHandler", new SimpleMessageHandler());
                 }
             });
         oneChannel.register();
@@ -59,12 +67,6 @@ public class NettyClient {
     public boolean sendMessage(RequestCommand req){
         //fixme 定义sendOneway的返回结果
         this.oneChannel.sendOneway(req);
-        return true;//fixme
-    }
-
-    public boolean sendMessage1(String content){
-        //fixme 定义sendOneway的返回结果
-        this.oneChannel.testsendOneway(content);
         return true;//fixme
     }
 

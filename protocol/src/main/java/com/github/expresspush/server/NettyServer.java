@@ -4,6 +4,7 @@ import com.github.expresspush.Status;
 import com.github.expresspush.config.ServerConfig;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import java.util.concurrent.ThreadFactory;
@@ -55,10 +56,10 @@ public class NettyServer implements RemotingServer {
 
         bootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
-//                .childOption(ChannelOption.SO_KEEPALIVE, true)
-//                .childOption(ChannelOption.SO_REUSEADDR, true)
-//                .childOption(ChannelOption.SO_RCVBUF, 32*1024) //32k
-//                .childOption(ChannelOption.SO_SNDBUF, 32*1024) //32k
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.SO_REUSEADDR, true)
+                .childOption(ChannelOption.SO_RCVBUF, 32*1024) //32k
+                .childOption(ChannelOption.SO_SNDBUF, 32*1024) //32k
 
                 //linux backlog default value: 1024; somaxconn default 128;
                 //The impact of these 2 values is the accept queue = min(backlog, somaxconn)

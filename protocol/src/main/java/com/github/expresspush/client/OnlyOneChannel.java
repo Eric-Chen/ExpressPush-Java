@@ -1,10 +1,8 @@
 package com.github.expresspush.client;
 
 import com.github.expresspush.handler.RequestCommand;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.util.CharsetUtil;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -66,10 +64,6 @@ public class OnlyOneChannel {
 
     public void sendOneway(RequestCommand request){
         this.channel.writeAndFlush(request);
-    }
-//fixme delete
-    public void testsendOneway(String request){
-        this.channel.writeAndFlush(Unpooled.copiedBuffer(request, CharsetUtil.UTF_8));
     }
 
 }

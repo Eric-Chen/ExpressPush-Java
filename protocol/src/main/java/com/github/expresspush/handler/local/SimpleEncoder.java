@@ -19,9 +19,8 @@ public class SimpleEncoder extends MessageToByteEncoder<RequestCommand>{
         out.writeBytes(dataTransfer.encode(msg));
     }
 
-
-
     @Override public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOGGER.error("exception.......", cause);
+        ctx.channel().close();
     }
 }
