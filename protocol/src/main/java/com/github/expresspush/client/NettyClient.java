@@ -24,8 +24,11 @@ import java.util.concurrent.TimeUnit;
 public class NettyClient extends NettyBasicAction {
 
     private static final long DEFAULT_REQUEST_TIMEOUT_MILLISECS = 3000;
+    public static final int DEFAULT_CONNECT_TIMEOUT_MILLISECS = 3000;
 
     private volatile Status status = Status.INITIALIZING;
+
+    private String serverAddr;
 
     private int port;
 
@@ -50,13 +53,13 @@ public class NettyClient extends NettyBasicAction {
         }
     });
 
-    public NettyClient(){
+    public NettyClient(String serverAddr, int port){
+        this.serverAddr = serverAddr;
         this.port = port;
     }
 
     private InetSocketAddress routeToServer(){
         //todo get server config through http??
-        String serverAddr = "127.0.0.1";
         return new InetSocketAddress(serverAddr, port);
     }
 
@@ -80,20 +83,21 @@ public class NettyClient extends NettyBasicAction {
                         .addLast("encoder", new SimpleEncoder())
                         .addLast("decoder", new SimpleDecoder())
                         .addLast("idle", new IdleStateHandler(0, 0, 60, TimeUnit.SECONDS))
-                        .addLast("messageHandler", new ClientMessageHandler());
+                        .addLast("messageHandler", new ClientMessageHandler(NettyClient.this));
                 }
             });
 
         register();
+
         //注册检查返回结果的schedule task
-        refreshTimeoutResponseScheduler.scheduleAtFixedRate(() -> refreshResponseTable(), 1000, 1000, TimeUnit.MILLISECONDS);
+        refreshTimeoutResponseScheduler.scheduleAtFixedRate(() -> refreshResponseTable(), 3000, 1000, TimeUnit.MILLISECONDS);
     }
 
     void register(){
         logger.info("[Client] start to connect to server");
         ChannelFuture channelFuture = this.bootstrap.connect(routeToServer());
         try {
-            if(channelFuture.await(3000, TimeUnit.MILLISECONDS)){
+            if(channelFuture.await(DEFAULT_CONNECT_TIMEOUT_MILLISECS, TimeUnit.MILLISECONDS)){
                 if(channelFuture.channel() != null && channelFuture.channel().isActive()){
                     this.channel = channelFuture.channel();
                     logger.info("[Client] connected to server");
@@ -112,10 +116,12 @@ public class NettyClient extends NettyBasicAction {
         }
     }
 
-    public void sendMessageOneway(TransferCommand req){
+    public void requestOneway(TransferCommand req){
         sendOneway(this.channel, req, DEFAULT_REQUEST_TIMEOUT_MILLISECS);
     }
 
-
+    public TransferCommand requestSync(TransferCommand req){
+        return remoteSendSync(this.channel, req,DEFAULT_REQUEST_TIMEOUT_MILLISECS);
+    }
 
 }

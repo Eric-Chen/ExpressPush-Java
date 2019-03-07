@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
 /**
  * 用途同 @InnerOnewaySemaphore
  */
-class InnerResponseFuture {
+public class ResponseFuture {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(InnerResponseFuture.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResponseFuture.class);
 
     private ChannelFuture chf;
 
@@ -35,7 +35,7 @@ class InnerResponseFuture {
 
     private RemoteAsyncCallback callback;
 
-    public InnerResponseFuture(final ChannelFuture chf,
+    public ResponseFuture(final ChannelFuture chf,
         final Semaphore semaphoreAsync,
         final long tickStart,
         final long timeoutMillisec,
@@ -47,14 +47,14 @@ class InnerResponseFuture {
         this.callback = callback;
     }
 
-    void release(){
+    public void release(){
         if(this.semaphoreAsync != null
             && once.compareAndSet(false, true)){
             this.semaphoreAsync.release();
         }
     }
 
-    void executeCallback(){
+    public void executeCallback(){
         if(callback != null){
             try {
                 callback.actionCompleted(this);
@@ -64,23 +64,23 @@ class InnerResponseFuture {
         }
     }
 
-    boolean isTimeout(){
+    public boolean isTimeout(){
         long now = System.nanoTime();
         long elapse = (now - this.tickStart)/1000000;
         return elapse > this.timeoutMillisec;
     }
 
 
-    void setSucceed(boolean succeed){
+    public void setSucceed(boolean succeed){
         this.succeed = succeed;
     }
 
-    void setResp(TransferCommand resp){
+    public void setResp(TransferCommand resp){
         this.resp = resp;
         this.latch.countDown();
     }
 
-    boolean await(long timeoutInMillisec) throws InterruptedException {
+    public boolean await(long timeoutInMillisec) throws InterruptedException {
         return this.latch.await(timeoutInMillisec, TimeUnit.MILLISECONDS);
     }
 

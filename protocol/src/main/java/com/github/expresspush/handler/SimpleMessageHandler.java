@@ -1,18 +1,33 @@
 package com.github.expresspush.handler;
 
+import com.github.expresspush.basic.ResponseFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
 
-public class SimpleMessageHandler extends SimpleChannelInboundHandler<TransferCommand> {
+public abstract class SimpleMessageHandler extends SimpleChannelInboundHandler<TransferCommand> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleMessageHandler.class);
 
     @Override protected void channelRead0(ChannelHandlerContext ctx, TransferCommand msg) throws Exception {
-        System.out.println("=======================");
-        LOGGER.info("show input {}", msg);
+        processInboundCommand(msg);
     }
+
+    protected void processInboundCommand(TransferCommand msg) {
+        Long respId = msg.getRespId();
+        if(respId != null){
+            ResponseFuture responseFuture = getResponseTable().get(respId);
+            if(responseFuture != null){
+                responseFuture.setResp(msg);
+                responseFuture.release();
+                responseFuture.executeCallback();
+
+                getResponseTable().remove(respId);
+            }
+        }
+
+    }
+
+    protected abstract Map<Long, ResponseFuture> getResponseTable();
 
 //    @Override
 //    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {

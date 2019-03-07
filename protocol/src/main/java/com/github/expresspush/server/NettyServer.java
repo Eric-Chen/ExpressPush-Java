@@ -1,13 +1,21 @@
 package com.github.expresspush.server;
 
 import com.github.expresspush.Status;
+import com.github.expresspush.basic.NettyBasicAction;
 import com.github.expresspush.config.ServerConfig;
+import com.github.expresspush.handler.ServerMessageHandler;
+import com.github.expresspush.handler.local.SimpleDecoder;
+import com.github.expresspush.handler.local.SimpleEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
@@ -15,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.github.expresspush.config.ServerConfig.PORT_CONFIG_KEY;
 
-public class NettyServer implements RemotingServer {
+public class NettyServer extends NettyBasicAction implements RemotingServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NettyServer.class);
 
@@ -65,7 +73,15 @@ public class NettyServer implements RemotingServer {
                 //The impact of these 2 values is the accept queue = min(backlog, somaxconn)
                 //if connections count exceed the limit, server won't accept any new connection.
 //                .childOption(ChannelOption.SO_BACKLOG)
-                .childHandler(new DefaultChannelInitializer());
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override protected void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline()
+                            .addLast("encoder", new SimpleEncoder())
+                            .addLast("decoder", new SimpleDecoder())
+                            .addLast("idle", new IdleStateHandler(0, 0, 60, TimeUnit.SECONDS))
+                            .addLast("messageHandler", new ServerMessageHandler(NettyServer.this));
+                    }
+                });
 
         String port = ServerConfig.getSystemProperty(PORT_CONFIG_KEY, DEFAULT_PORT);
 

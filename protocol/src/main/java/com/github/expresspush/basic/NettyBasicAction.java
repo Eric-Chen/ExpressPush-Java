@@ -33,7 +33,7 @@ public abstract class NettyBasicAction {
     /* 异步方式在默认情况的操作方式是，打完就跑，所以在请求量过大情况下，会导致内存压力 */
     private Semaphore semaphoreAsync;
 
-    private ConcurrentMap<Long/* RequestId */, InnerResponseFuture /* ResultFuture */> responseTable = new ConcurrentHashMap();
+    private ConcurrentMap<Long/* RequestId */, ResponseFuture /* ResultFuture */> responseTable = new ConcurrentHashMap();
 
     public NettyBasicAction(){
         this(DEFAULT_ONEWAY_PROCESS_LIMIT, DEFAULT_ASYNC_PROCESS_LIMIT);
@@ -50,11 +50,11 @@ public abstract class NettyBasicAction {
     */
     protected void refreshResponseTable(){
         //1.iterate responseTable
-        List<InnerResponseFuture> rl = new LinkedList();
-        Iterator<Map.Entry<Long, InnerResponseFuture>> respIterator = this.responseTable.entrySet().iterator();
+        List<ResponseFuture> rl = new LinkedList();
+        Iterator<Map.Entry<Long, ResponseFuture>> respIterator = this.responseTable.entrySet().iterator();
         while(respIterator.hasNext()){
-            Map.Entry<Long, InnerResponseFuture> entry = respIterator.next();
-            InnerResponseFuture respFuture = entry.getValue();
+            Map.Entry<Long, ResponseFuture> entry = respIterator.next();
+            ResponseFuture respFuture = entry.getValue();
             //2.check each response timeout
             if(respFuture.isTimeout()){
                 //!!important!!
@@ -101,7 +101,7 @@ public abstract class NettyBasicAction {
         validateChannelStatus(channel);
         long tickStart = System.nanoTime();
         ChannelFuture rf = channel.writeAndFlush(request);
-        final InnerResponseFuture respFuture = new InnerResponseFuture(rf, null, tickStart, timeoutmillisec, null);
+        final ResponseFuture respFuture = new ResponseFuture(rf, null, tickStart, timeoutmillisec, null);
         final Long requestId = request.getRid();
         this.responseTable.put(requestId, respFuture);
         rf.addListener(new ChannelFutureListener() {
@@ -143,7 +143,7 @@ public abstract class NettyBasicAction {
             if(this.semaphoreAsync.tryAcquire(timeoutMillisec, TimeUnit.MILLISECONDS)){
                 checkTimeout("async send command "+request, tickStart, timeoutMillisec, () -> this.semaphoreAsync.release() );
                 ChannelFuture cf = channel.writeAndFlush(request);
-                final InnerResponseFuture irf = new InnerResponseFuture(cf,
+                final ResponseFuture irf = new ResponseFuture(cf,
                                                                         this.semaphoreAsync,
                                                                         tickStart,
                                                                         timeoutMillisec,
@@ -191,4 +191,7 @@ public abstract class NettyBasicAction {
         return channel == null || channel.isActive();
     }
 
+    public ConcurrentMap<Long, ResponseFuture> getResponseTable() {
+        return responseTable;
+    }
 }

@@ -27,7 +27,7 @@ public class NettyClientTest {
 
     @Before
     public void init() throws Exception {
-        client = new NettyClient();
+        client = new NettyClient("127.0.0.1", 52025);
         client.start();
 
 //        EchoClient nc = new EchoClient("127.0.0.1", 9090);
@@ -52,7 +52,7 @@ public class NettyClientTest {
         req.setJsonData("test");
 
         for (int i = 0; i < 5; i++) {
-            client.sendMessageOneway(req);
+            client.requestOneway(req);
         }
 
         System.in.read();

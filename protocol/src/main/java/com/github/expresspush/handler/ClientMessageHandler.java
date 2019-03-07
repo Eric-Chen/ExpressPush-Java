@@ -1,10 +1,18 @@
 package com.github.expresspush.handler;
 
-import io.netty.channel.ChannelHandlerContext;
+import com.github.expresspush.basic.ResponseFuture;
+import com.github.expresspush.client.NettyClient;
+import java.util.Map;
 
 public class ClientMessageHandler extends SimpleMessageHandler {
 
-    @Override protected void channelRead0(ChannelHandlerContext ctx, TransferCommand msg) throws Exception {
-        super.channelRead0(ctx, msg);
+    private final NettyClient client;
+
+    public ClientMessageHandler(NettyClient client) {
+        this.client = client;
+    }
+
+    @Override protected Map<Long, ResponseFuture> getResponseTable() {
+        return client.getResponseTable();
     }
 }
