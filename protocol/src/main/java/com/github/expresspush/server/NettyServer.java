@@ -27,7 +27,7 @@ public class NettyServer extends NettyBasicAction implements RemotingServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NettyServer.class);
 
-    private static final String BOSS_THREAD_NAME = "NettyServer_boss_1";
+    private static final String BOSS_THREAD_NAME = "NettyServer_boss_";
     private static final String WORKER_THREAD_NAME_PREFIX = "NettyServer_worker_";
     private static final String DEFAULT_PORT = "52025";
 
