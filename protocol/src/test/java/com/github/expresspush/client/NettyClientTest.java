@@ -27,7 +27,7 @@ public class NettyClientTest {
 
     @Before
     public void init() throws Exception {
-        client = new NettyClient("127.0.0.1", 52025);
+        client = new NettyClient();
         client.start();
 
 //        EchoClient nc = new EchoClient("127.0.0.1", 9090);

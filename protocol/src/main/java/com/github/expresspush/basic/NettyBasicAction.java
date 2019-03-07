@@ -75,6 +75,7 @@ public abstract class NettyBasicAction {
      * @param timeoutmillisec 超时保护
      */
     protected void sendOneway(final Channel channel, TransferCommand request, long timeoutmillisec){
+        validateChannelStatus(channel);
         try {
             if (this.semaphoreOneway.tryAcquire(timeoutmillisec, TimeUnit.MILLISECONDS)){
                 InnerOnewaySemaphore oneTrigger = InnerOnewaySemaphore.of(this.semaphoreOneway);
@@ -97,6 +98,7 @@ public abstract class NettyBasicAction {
     }
 
     protected TransferCommand remoteSendSync(final Channel channel, TransferCommand request, long timeoutmillisec) {
+        validateChannelStatus(channel);
         long tickStart = System.nanoTime();
         ChannelFuture rf = channel.writeAndFlush(request);
         final InnerResponseFuture respFuture = new InnerResponseFuture(rf, null, tickStart, timeoutmillisec, null);
@@ -131,17 +133,20 @@ public abstract class NettyBasicAction {
 
     protected void remoteSendAsync(final Channel channel,
         TransferCommand request,
-        long timeoutmillisec,
+        long timeoutMillisec,
         RemoteAsyncCallback asyncCallback) {
+
+        validateChannelStatus(channel);
+
         long tickStart = System.nanoTime();
         try {
-            if(this.semaphoreAsync.tryAcquire(timeoutmillisec, TimeUnit.MILLISECONDS)){
-                checkTimeout("async send command "+request, tickStart, timeoutmillisec, () -> this.semaphoreAsync.release() );
+            if(this.semaphoreAsync.tryAcquire(timeoutMillisec, TimeUnit.MILLISECONDS)){
+                checkTimeout("async send command "+request, tickStart, timeoutMillisec, () -> this.semaphoreAsync.release() );
                 ChannelFuture cf = channel.writeAndFlush(request);
                 final InnerResponseFuture irf = new InnerResponseFuture(cf,
                                                                         this.semaphoreAsync,
                                                                         tickStart,
-                                                                        timeoutmillisec,
+                                                                        timeoutMillisec,
                                                                         asyncCallback);
                 this.responseTable.put(request.getRid(), irf);
                 cf.addListener(new ChannelFutureListener() {
@@ -166,6 +171,12 @@ public abstract class NettyBasicAction {
         }
     }
 
+    private void validateChannelStatus(Channel channel) {
+        if(!isValid(channel)){
+            throw new InvalidChannelStatusException("Channel isn't active, channel id: [{"+ channel.id() +"}]");
+        }
+    }
+
     /* default time unit: ms */
     private void checkTimeout(String exceptionMsg, long startTick, long timeoutLimit, Runnable externalTask){
         long now = System.nanoTime();
@@ -174,6 +185,10 @@ public abstract class NettyBasicAction {
             externalTask.run();
             throw new RemoteTimeoutException(exceptionMsg);
         }
+    }
+
+    private boolean isValid(Channel channel){
+        return channel == null || channel.isActive();
     }
 
 }

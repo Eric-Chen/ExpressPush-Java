@@ -20,45 +20,44 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- */
-//todo 单独用client来控制连接不够，因为一个client只有一个连接可用。应该提供一个factory来保证有活着的client, 为此就仍然需要给client定义生命周期和状态
 public class NettyClient extends NettyBasicAction {
 
     private static final long DEFAULT_REQUEST_TIMEOUT_MILLISECS = 3000;
 
     private volatile Status status = Status.INITIALIZING;
 
-    //todo 这是点对点的处理方式，不利于分布式的管理。需要换成路由模式
-    private String saddr;
-
     private int port;
 
-    //todo 确保唯一channel vs 确保唯一client
-    private Channel channel;
+    /* 不可用时，会切换channel*/
+    private volatile Channel channel;
 
     EventLoopGroup group;
 
     Bootstrap bootstrap;
 
     private final ScheduledExecutorService refreshTimeoutResponseScheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory(){
-
-        private static final String THREAD_NAME_PREFIX = "client_result_check_schedule_";
-        private AtomicInteger count = new AtomicInteger(0);
-
         @Override public Thread newThread(Runnable r) {
-            String tn = THREAD_NAME_PREFIX + count.incrementAndGet();
-            logger.info("[Client] result schedule request new thread, new name: [{}]", tn);
-            return new Thread(r, tn);
+            logger.info("[Client] result schedule request new thread, new name: client_result_check_schedule");
+            return new Thread(r, "client_result_check_schedule");
         }
     });
 
-    public NettyClient(String saddr, int port){
-        this.saddr = saddr;
+    private final ScheduledExecutorService checkChannelScheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        @Override public Thread newThread(Runnable r) {
+            logger.info("[Client] check channel schedule request new thread, new name: client_result_check_schedule");
+            return new Thread(r, "client_channel_check_schedule");
+        }
+    });
+
+    public NettyClient(){
         this.port = port;
+    }
+
+    private InetSocketAddress routeToServer(){
+        //todo get server config through http??
+        String serverAddr = "127.0.0.1";
+        return new InetSocketAddress(serverAddr, port);
     }
 
     public void shutdown(){
@@ -74,7 +73,6 @@ public class NettyClient extends NettyBasicAction {
         bootstrap = new Bootstrap();
         bootstrap.group(group)
             .channel(NioSocketChannel.class)
-            .remoteAddress(new InetSocketAddress(saddr, port))
             .handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
@@ -93,7 +91,7 @@ public class NettyClient extends NettyBasicAction {
 
     void register(){
         logger.info("[Client] start to connect to server");
-        ChannelFuture channelFuture = this.bootstrap.connect();
+        ChannelFuture channelFuture = this.bootstrap.connect(routeToServer());
         try {
             if(channelFuture.await(3000, TimeUnit.MILLISECONDS)){
                 if(channelFuture.channel() != null && channelFuture.channel().isActive()){
@@ -104,7 +102,14 @@ public class NettyClient extends NettyBasicAction {
         } catch (InterruptedException e) {
             logger.info("[Client] got exception", e);
         }
+    }
 
+    void releaseChannel(){
+        if(!this.channel.isActive()){
+            //todo release the inactive channel
+            //fixme should do some cleaning job on the channel?
+            this.channel.close();
+        }
     }
 
     public void sendMessageOneway(TransferCommand req){
