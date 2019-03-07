@@ -1,6 +1,6 @@
 package com.github.expresspush.client;
 
-import com.github.expresspush.handler.RequestCommand;
+import com.github.expresspush.handler.TransferCommand;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -44,7 +44,7 @@ public class NettyClientTest {
      * */
     @Test
     public void test_client() throws IOException {
-        RequestCommand req = new RequestCommand();
+        TransferCommand req = new TransferCommand();
         req.setRid(1L);
         req.setFromUid(2L);
         req.setTargetId(3L);
@@ -52,7 +52,7 @@ public class NettyClientTest {
         req.setJsonData("test");
 
         for (int i = 0; i < 5; i++) {
-            client.sendMessage(req);
+            client.sendMessageOneway(req);
         }
 
         System.in.read();

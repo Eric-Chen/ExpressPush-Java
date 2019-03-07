@@ -5,11 +5,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimpleMessageHandler extends SimpleChannelInboundHandler<RequestCommand> {
+public class SimpleMessageHandler extends SimpleChannelInboundHandler<TransferCommand> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleMessageHandler.class);
 
-    @Override protected void channelRead0(ChannelHandlerContext ctx, RequestCommand msg) throws Exception {
+    @Override protected void channelRead0(ChannelHandlerContext ctx, TransferCommand msg) throws Exception {
         System.out.println("=======================");
         LOGGER.info("show input {}", msg);
     }

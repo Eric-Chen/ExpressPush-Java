@@ -1,6 +1,6 @@
 package com.github.expresspush.handler.local;
 
-import com.github.expresspush.handler.RequestCommand;
+import com.github.expresspush.handler.TransferCommand;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -30,7 +30,7 @@ public class SimpleDecoder extends LengthFieldBasedFrameDecoder {
 
             ByteBuffer byteBuffer = frame.nioBuffer();
 
-            return RequestCommand.decode(byteBuffer);
+            return TransferCommand.decode(byteBuffer);
         } catch (Exception e) {
             e.printStackTrace();
             ctx.channel().close();

@@ -3,10 +3,12 @@ package com.github.expresspush.handler;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-public class RequestCommand {
+public class TransferCommand {
     private static final Charset CHARSET_UTF8 = Charset.forName("utf-8");
 
     private Long rid;//request id
+
+    private Long respId;//response id
 
     private Long fromUid;//sent from uid
 
@@ -14,15 +16,23 @@ public class RequestCommand {
 
     private Short type;//1.p2p 2.p2g
 
+    private short oneway = 0;
+
     private String jsonData;//sent content
+
+    public void markOneway(){
+        this.oneway = 1;
+    }
 
     public short length(){
         int contentLength = jsonData.getBytes(CHARSET_UTF8).length;
         return (short)(
-              8  //rid
+            8  //rid
+            + 8  //respId
             + 8  //fromUid
             + 8  //targetId
             + 2  //type
+            + 2  //oneway
             + 2  //content bytes length
             + contentLength);
     }
@@ -30,21 +40,25 @@ public class RequestCommand {
     public ByteBuffer encode(){
         ByteBuffer buf = ByteBuffer.allocate(length());
         buf.putLong(rid);
+        buf.putLong(respId);
         buf.putLong(fromUid);
         buf.putLong(targetId);
         buf.putShort(type);
+        buf.putShort(oneway);//oneway default value 0
         buf.putShort((short) (jsonData.getBytes(CHARSET_UTF8).length));
         buf.put(jsonData.getBytes(CHARSET_UTF8));
         buf.flip();
         return buf;
     }
 
-    public static RequestCommand decode(ByteBuffer buf){
-        RequestCommand result = new RequestCommand();
+    public static TransferCommand decode(ByteBuffer buf){
+        TransferCommand result = new TransferCommand();
         result.setRid(buf.getLong());
+        result.setRespId(buf.getLong());
         result.setFromUid(buf.getLong());
         result.setTargetId(buf.getLong());
         result.setType(buf.getShort());
+        result.setOneway(buf.getShort());
         byte[] contentBytes = new byte[buf.getShort()];
         buf.get(contentBytes);
         result.setJsonData(new String(contentBytes, CHARSET_UTF8));
@@ -52,11 +66,13 @@ public class RequestCommand {
     }
 
     @Override public String toString() {
-        return "RequestCommand{" +
+        return "TransferCommand{" +
             "rid=" + rid +
+            ", respId=" + respId +
             ", fromUid=" + fromUid +
             ", targetId=" + targetId +
             ", type=" + type +
+            ", oneway=" + oneway +
             ", jsonData='" + jsonData + '\'' +
             '}';
     }
@@ -67,6 +83,14 @@ public class RequestCommand {
 
     public void setRid(Long rid) {
         this.rid = rid;
+    }
+
+    public Long getRespId() {
+        return respId;
+    }
+
+    public void setRespId(Long respId) {
+        this.respId = respId;
     }
 
     public Long getFromUid() {
@@ -91,6 +115,14 @@ public class RequestCommand {
 
     public void setType(Short type) {
         this.type = type;
+    }
+
+    public short getOneway() {
+        return oneway;
+    }
+
+    public void setOneway(short oneway) {
+        this.oneway = oneway;
     }
 
     public String getJsonData() {

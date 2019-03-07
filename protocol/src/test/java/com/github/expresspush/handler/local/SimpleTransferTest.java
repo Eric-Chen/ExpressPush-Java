@@ -1,6 +1,6 @@
 package com.github.expresspush.handler.local;
 
-import com.github.expresspush.handler.RequestCommand;
+import com.github.expresspush.handler.TransferCommand;
 import com.github.expresspush.serial.simple.SimpleDataTransfer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -118,7 +118,7 @@ public class SimpleTransferTest {
     @Test
     public void test_simple_encode_and_decode(){
 
-        RequestCommand req = new RequestCommand();
+        TransferCommand req = new TransferCommand();
         req.setRid(1L);
         req.setFromUid(2L);
         req.setTargetId(3L);
@@ -139,7 +139,7 @@ public class SimpleTransferTest {
         System.out.println("=========="+ r.readableBytes() + "===============");
         //use encoded data as inbound data
         channel.writeInbound(r);
-        RequestCommand rs = channel.readInbound();
+        TransferCommand rs = channel.readInbound();
         System.out.println(rs);
     }
 

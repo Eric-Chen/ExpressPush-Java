@@ -1,10 +1,10 @@
 package com.github.expresspush.serial.simple;
 
-import com.github.expresspush.handler.RequestCommand;
+import com.github.expresspush.handler.TransferCommand;
 import com.github.expresspush.serial.DataTransfer;
 import java.nio.ByteBuffer;
 
-public class SimpleDataTransfer implements DataTransfer<RequestCommand> {
+public class SimpleDataTransfer implements DataTransfer<TransferCommand> {
 
     /**
      * 先写入字段长度参数
@@ -14,7 +14,7 @@ public class SimpleDataTransfer implements DataTransfer<RequestCommand> {
      * @return
      */
     @Override
-    public ByteBuffer encode(RequestCommand msg) {
+    public ByteBuffer encode(TransferCommand msg) {
         int contentLength = msg.length();
         short fullLength = (short) (2 + contentLength);
         ByteBuffer msgBuf = msg.encode();
@@ -29,8 +29,8 @@ public class SimpleDataTransfer implements DataTransfer<RequestCommand> {
     }
 
     @Override
-    public RequestCommand decode(ByteBuffer buffer) {
-        return RequestCommand.decode(buffer);
+    public TransferCommand decode(ByteBuffer buffer) {
+        return TransferCommand.decode(buffer);
     }
 
 }
