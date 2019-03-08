@@ -1,5 +1,6 @@
 package com.github.expresspush.basic;
 
+import com.github.expresspush.config.ServerConfig;
 import com.github.expresspush.exception.RemoteTimeoutException;
 import com.github.expresspush.handler.TransferCommand;
 import io.netty.channel.Channel;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -26,6 +29,8 @@ public abstract class NettyBasicAction {
     //fixme 针对异步处理，确定合适的限制
     private static final int DEFAULT_ASYNC_PROCESS_LIMIT = 65535;
 
+    private static final String REQUEST_THREAD_NAME_PREFIX = "request_process_";
+
 
     /* oneway方式在默认情况的操作方式是，打完就跑，所以在请求量过大情况下，会导致内存压力 */
     private Semaphore semaphoreOneway;
@@ -35,6 +40,12 @@ public abstract class NettyBasicAction {
 
     private ConcurrentMap<Long/* RequestId */, ResponseFuture /* ResultFuture */> responseTable = new ConcurrentHashMap();
 
+    /**
+     * 主要服务请求的处理分发
+     */
+    private ExecutorService requestExecutor;
+
+
     public NettyBasicAction(){
         this(DEFAULT_ONEWAY_PROCESS_LIMIT, DEFAULT_ASYNC_PROCESS_LIMIT);
     }
@@ -42,6 +53,10 @@ public abstract class NettyBasicAction {
     public NettyBasicAction(final int onewayLimit, final int asyncLimit){
         this.semaphoreOneway = new Semaphore(onewayLimit, false);
         this.semaphoreAsync = new Semaphore(asyncLimit, false);
+    }
+
+    protected void initRequestExecutor(){
+        this.requestExecutor = Executors.newFixedThreadPool(ServerConfig.DEFAULT_REQUESTS_CONCURRENCY, new DefaultThreadFactory(REQUEST_THREAD_NAME_PREFIX, true));
     }
 
     /*
@@ -193,5 +208,9 @@ public abstract class NettyBasicAction {
 
     public ConcurrentMap<Long, ResponseFuture> getResponseTable() {
         return responseTable;
+    }
+
+    public ExecutorService getRequestExecutor() {
+        return requestExecutor;
     }
 }

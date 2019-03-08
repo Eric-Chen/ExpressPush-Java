@@ -1,11 +1,13 @@
 package com.github.expresspush.client;
 
 import com.github.expresspush.Status;
+import com.github.expresspush.basic.DefaultThreadFactory;
 import com.github.expresspush.basic.NettyBasicAction;
 import com.github.expresspush.handler.ClientMessageHandler;
 import com.github.expresspush.handler.TransferCommand;
 import com.github.expresspush.handler.local.SimpleDecoder;
 import com.github.expresspush.handler.local.SimpleEncoder;
+import com.github.expresspush.route.RequestProcessService;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -16,9 +18,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class NettyClient extends NettyBasicAction {
@@ -39,19 +41,15 @@ public class NettyClient extends NettyBasicAction {
 
     Bootstrap bootstrap;
 
-    private final ScheduledExecutorService refreshTimeoutResponseScheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory(){
-        @Override public Thread newThread(Runnable r) {
-            logger.info("[Client] result schedule request new thread, new name: client_result_check_schedule");
-            return new Thread(r, "client_result_check_schedule");
-        }
-    });
+    private RequestProcessService requestProcessService;
 
-    private final ScheduledExecutorService checkChannelScheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-        @Override public Thread newThread(Runnable r) {
-            logger.info("[Client] check channel schedule request new thread, new name: client_result_check_schedule");
-            return new Thread(r, "client_channel_check_schedule");
-        }
-    });
+    private final ExecutorService requestExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new DefaultThreadFactory("client_request_handler_", true));
+
+    private final ScheduledExecutorService refreshTimeoutResponseScheduler
+        = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("client_refresh_timeout_handler_", false));
+
+//    private final ScheduledExecutorService checkChannelScheduler
+//        = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("client_channel_check_schedule", false));
 
     public NettyClient(String serverAddr, int port){
         this.serverAddr = serverAddr;
@@ -71,6 +69,8 @@ public class NettyClient extends NettyBasicAction {
         if(this.status != Status.INITIALIZING) {
             throw new IllegalStateException("client has already initialized");
         }
+
+        initRequestExecutor();
 
         group = new NioEventLoopGroup();
         bootstrap = new Bootstrap();
@@ -124,4 +124,11 @@ public class NettyClient extends NettyBasicAction {
         return remoteSendSync(this.channel, req,DEFAULT_REQUEST_TIMEOUT_MILLISECS);
     }
 
+    public RequestProcessService getRequestProcessService() {
+        return requestProcessService;
+    }
+
+    public void setRequestProcessService(RequestProcessService requestProcessService) {
+        this.requestProcessService = requestProcessService;
+    }
 }

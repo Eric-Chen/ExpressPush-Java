@@ -52,7 +52,8 @@ public class NettyClientTest {
         req.setJsonData("test");
 
         for (int i = 0; i < 5; i++) {
-            client.sendOneway(req);
+            TransferCommand r = client.sendSync(req);
+            System.out.println(r);
         }
 
         System.in.read();

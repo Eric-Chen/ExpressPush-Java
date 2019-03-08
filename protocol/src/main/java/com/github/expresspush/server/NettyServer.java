@@ -1,6 +1,7 @@
 package com.github.expresspush.server;
 
 import com.github.expresspush.Status;
+import com.github.expresspush.basic.DefaultThreadFactory;
 import com.github.expresspush.basic.NettyBasicAction;
 import com.github.expresspush.basic.RemoteAsyncCallback;
 import com.github.expresspush.config.ServerConfig;
@@ -18,11 +19,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +33,6 @@ public class NettyServer extends NettyBasicAction implements RemotingServer {
     private static final long DEFAULT_REMOTE_TIMEOUT_MILLISECS = 3000;
     private static final String BOSS_THREAD_NAME = "NettyServer_boss_";
     private static final String WORKER_THREAD_NAME_PREFIX = "NettyServer_worker_";
-    private static final String REQUEST_THREAD_NAME_PREFIX = "NettyServer_request_";
     private static final String DEFAULT_PORT = "52025";
 
 
@@ -49,18 +45,14 @@ public class NettyServer extends NettyBasicAction implements RemotingServer {
 
     private NioEventLoopGroup workerGroup;
 
-    /**
-     * 主要服务请求的处理分发
-     */
-    private ExecutorService requestExecutor;
-
     private RequestProcessService requestProcessService;
 
     public void start() {
+
+        initRequestExecutor();
+
         //todo setup config properties
         int workerCount = ServerConfig.WORKER_COUNT;
-
-        requestExecutor = Executors.newFixedThreadPool(ServerConfig.DEFAULT_REQUESTS_CONCURRENCY, new DefaultThreadFactory(REQUEST_THREAD_NAME_PREFIX, true));
 
         //todo mix properties from startup args
         bootstrap = new ServerBootstrap();
@@ -119,8 +111,7 @@ public class NettyServer extends NettyBasicAction implements RemotingServer {
         }
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
-
-        this.requestExecutor.shutdown();
+        this.getRequestExecutor().shutdown();
     }
 
     public void sendOneway(Channel channel, TransferCommand cmd){
@@ -135,26 +126,6 @@ public class NettyServer extends NettyBasicAction implements RemotingServer {
         this.remoteSendAsync(channel, cmd, DEFAULT_REMOTE_TIMEOUT_MILLISECS, callback);
     }
 
-    private static class DefaultThreadFactory implements ThreadFactory {
-
-        private final String threadNamePrefix;
-        private AtomicInteger indexer = new AtomicInteger(0);
-        private boolean enableIndex;
-
-        public DefaultThreadFactory(String threadNamePrefix, boolean enableIndex){
-            this.threadNamePrefix = threadNamePrefix;
-            this.enableIndex = enableIndex;
-        }
-
-        public Thread newThread(Runnable r) {
-            String threadName = this.threadNamePrefix;
-            if(this.enableIndex){
-                threadName += indexer.incrementAndGet();
-            }
-            return new Thread(r,  threadName);
-        }
-    }
-
     public String status() {
         return status.get().name();
     }
@@ -167,7 +138,5 @@ public class NettyServer extends NettyBasicAction implements RemotingServer {
         return requestProcessService;
     }
 
-    public ExecutorService getRequestExecutor() {
-        return requestExecutor;
-    }
+
 }
