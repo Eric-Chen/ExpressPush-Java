@@ -45,14 +45,14 @@ public class NettyClientTest {
     @Test
     public void test_client() throws IOException {
         TransferCommand req = new TransferCommand();
-        req.setRid(1L);
+        req.setReqId(1L);
         req.setFromUid(2L);
         req.setTargetId(3L);
         req.setType((short)11);
         req.setJsonData("test");
 
         for (int i = 0; i < 5; i++) {
-            client.requestOneway(req);
+            client.sendOneway(req);
         }
 
         System.in.read();

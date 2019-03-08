@@ -6,7 +6,7 @@ import java.nio.charset.Charset;
 public class TransferCommand {
     private static final Charset CHARSET_UTF8 = Charset.forName("utf-8");
 
-    private Long rid;//request id
+    private Long reqId;//request id
 
     private Long respId;//response id
 
@@ -27,7 +27,7 @@ public class TransferCommand {
     public short length(){
         int contentLength = jsonData.getBytes(CHARSET_UTF8).length;
         return (short)(
-            8  //rid
+            8  //reqId
             + 8  //respId
             + 8  //fromUid
             + 8  //targetId
@@ -39,7 +39,7 @@ public class TransferCommand {
 
     public ByteBuffer encode(){
         ByteBuffer buf = ByteBuffer.allocate(length());
-        buf.putLong(rid);
+        buf.putLong(reqId);
         buf.putLong(respId);
         buf.putLong(fromUid);
         buf.putLong(targetId);
@@ -53,7 +53,7 @@ public class TransferCommand {
 
     public static TransferCommand decode(ByteBuffer buf){
         TransferCommand result = new TransferCommand();
-        result.setRid(buf.getLong());
+        result.setReqId(buf.getLong());
         result.setRespId(buf.getLong());
         result.setFromUid(buf.getLong());
         result.setTargetId(buf.getLong());
@@ -67,7 +67,7 @@ public class TransferCommand {
 
     @Override public String toString() {
         return "TransferCommand{" +
-            "rid=" + rid +
+            "reqId=" + reqId +
             ", respId=" + respId +
             ", fromUid=" + fromUid +
             ", targetId=" + targetId +
@@ -77,12 +77,12 @@ public class TransferCommand {
             '}';
     }
 
-    public Long getRid() {
-        return rid;
+    public Long getReqId() {
+        return reqId;
     }
 
-    public void setRid(Long rid) {
-        this.rid = rid;
+    public void setReqId(Long reqId) {
+        this.reqId = reqId;
     }
 
     public Long getRespId() {

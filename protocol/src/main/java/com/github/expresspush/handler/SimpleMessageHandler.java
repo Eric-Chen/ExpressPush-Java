@@ -9,10 +9,10 @@ public abstract class SimpleMessageHandler extends SimpleChannelInboundHandler<T
 
 
     @Override protected void channelRead0(ChannelHandlerContext ctx, TransferCommand msg) throws Exception {
-        processInboundCommand(msg);
+        processResponseCommand(msg);
     }
 
-    protected void processInboundCommand(TransferCommand msg) {
+    protected void processResponseCommand(TransferCommand msg) {
         Long respId = msg.getRespId();
         if(respId != null){
             ResponseFuture responseFuture = getResponseTable().get(respId);

@@ -74,7 +74,7 @@ public abstract class NettyBasicAction {
      * @param request
      * @param timeoutmillisec 超时保护
      */
-    protected void sendOneway(final Channel channel, TransferCommand request, long timeoutmillisec){
+    protected void remoteSendOneway(final Channel channel, TransferCommand request, long timeoutmillisec){
         validateChannelStatus(channel);
         try {
             if (this.semaphoreOneway.tryAcquire(timeoutmillisec, TimeUnit.MILLISECONDS)){
@@ -102,7 +102,7 @@ public abstract class NettyBasicAction {
         long tickStart = System.nanoTime();
         ChannelFuture rf = channel.writeAndFlush(request);
         final ResponseFuture respFuture = new ResponseFuture(rf, null, tickStart, timeoutmillisec, null);
-        final Long requestId = request.getRid();
+        final Long requestId = request.getReqId();
         this.responseTable.put(requestId, respFuture);
         rf.addListener(new ChannelFutureListener() {
             @Override public void operationComplete(ChannelFuture future) throws Exception {
@@ -148,7 +148,7 @@ public abstract class NettyBasicAction {
                                                                         tickStart,
                                                                         timeoutMillisec,
                                                                         asyncCallback);
-                this.responseTable.put(request.getRid(), irf);
+                this.responseTable.put(request.getReqId(), irf);
                 cf.addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {

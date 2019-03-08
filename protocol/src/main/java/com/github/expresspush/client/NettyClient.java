@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class NettyClient extends NettyBasicAction {
 
     private static final long DEFAULT_REQUEST_TIMEOUT_MILLISECS = 3000;
-    public static final int DEFAULT_CONNECT_TIMEOUT_MILLISECS = 3000;
+    private static final int DEFAULT_CONNECT_TIMEOUT_MILLISECS = 3000;
 
     private volatile Status status = Status.INITIALIZING;
 
@@ -116,11 +116,11 @@ public class NettyClient extends NettyBasicAction {
         }
     }
 
-    public void requestOneway(TransferCommand req){
-        sendOneway(this.channel, req, DEFAULT_REQUEST_TIMEOUT_MILLISECS);
+    public void sendOneway(TransferCommand req){
+        remoteSendOneway(this.channel, req, DEFAULT_REQUEST_TIMEOUT_MILLISECS);
     }
 
-    public TransferCommand requestSync(TransferCommand req){
+    public TransferCommand sendSync(TransferCommand req){
         return remoteSendSync(this.channel, req,DEFAULT_REQUEST_TIMEOUT_MILLISECS);
     }
 

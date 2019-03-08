@@ -2,6 +2,6 @@ package com.github.expresspush.basic;
 
 public interface RemoteAsyncCallback {
 
-    void actionCompleted(ResponseFuture future);
+    void actionCompleted(ResponseFuture f);
 
 }

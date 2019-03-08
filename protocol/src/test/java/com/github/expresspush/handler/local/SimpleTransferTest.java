@@ -119,7 +119,7 @@ public class SimpleTransferTest {
     public void test_simple_encode_and_decode(){
 
         TransferCommand req = new TransferCommand();
-        req.setRid(1L);
+        req.setReqId(1L);
         req.setFromUid(2L);
         req.setTargetId(3L);
         req.setType((short)11);
