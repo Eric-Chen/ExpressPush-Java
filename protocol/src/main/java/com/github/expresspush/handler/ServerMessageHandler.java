@@ -19,7 +19,7 @@ public class ServerMessageHandler extends SimpleMessageHandler {
     @Override protected void channelRead0(ChannelHandlerContext ctx, TransferCommand msg) throws Exception {
         super.channelRead0(ctx, msg);
         //todo handle request
-        if(msg.getRespId() == null){
+        if(msg.getRespId() == null || msg.getRespId() == 0){
             //todo process to target service in async mode, not to block eventloop
             //todo Return from the service should send message to client through netty server directly
             Runnable reqTask = new Runnable() {

@@ -8,7 +8,7 @@ public class TransferCommand {
 
     private Long reqId;//request id
 
-    private Long respId;//response id
+    private Long respId = 0L;//response id
 
     private Long fromUid;//sent from uid
 
@@ -39,11 +39,11 @@ public class TransferCommand {
 
     public ByteBuffer encode(){
         ByteBuffer buf = ByteBuffer.allocate(length());
-        buf.putLong(reqId);
-        buf.putLong(respId);
-        buf.putLong(fromUid);
-        buf.putLong(targetId);
-        buf.putShort(type);
+        buf.putLong(reqId  == null ? 0L : reqId);
+        buf.putLong(respId == null ? 0L : respId);
+        buf.putLong(fromUid== null ? 0L : fromUid);
+        buf.putLong(targetId== null ? 0L : targetId);
+        buf.putShort(type == null ? 1 : type);
         buf.putShort(oneway);//oneway default value 0
         buf.putShort((short) (jsonData.getBytes(CHARSET_UTF8).length));
         buf.put(jsonData.getBytes(CHARSET_UTF8));

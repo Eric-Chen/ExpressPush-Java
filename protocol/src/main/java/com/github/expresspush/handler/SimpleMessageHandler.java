@@ -14,7 +14,7 @@ public abstract class SimpleMessageHandler extends SimpleChannelInboundHandler<T
 
     protected void processResponseCommand(TransferCommand msg) {
         Long respId = msg.getRespId();
-        if(respId != null){
+        if(respId != null && respId > 0){
             ResponseFuture responseFuture = getResponseTable().get(respId);
             if(responseFuture != null){
                 responseFuture.setResp(msg);

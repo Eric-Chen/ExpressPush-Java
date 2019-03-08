@@ -126,6 +126,7 @@ public abstract class NettyBasicAction {
                     return;
                 } else {
                     respFuture.setSucceed(false);
+                    logger.info("fail on request, msg: [{}]", future.cause());
                 }
                 respFuture.setResp(null);
             }
