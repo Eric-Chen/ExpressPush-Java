@@ -22,13 +22,14 @@ public class ServerMessageHandler extends SimpleMessageHandler {
         if(msg.getRespId() == null){
             //todo process to target service in async mode, not to block eventloop
             //todo Return from the service should send message to client through netty server directly
-
             Runnable reqTask = new Runnable() {
                 @Override public void run() {
-                    Object result = requestProcessService.process(msg);
-                    //todo 矛盾：发送信息的接口在NettyServer，response的处理依靠server发送信息，业务有不必要的耦合
+                    TransferCommand result = requestProcessService.process(msg);
+                    //发送信息的接口在NettyServer，response的处理依靠server发送信息，业务有不必要的耦合
+                    server.sendOneway(ctx.channel(), result);
                 }
             };
+
             server.getRequestExecutor().submit(reqTask);
         }
 

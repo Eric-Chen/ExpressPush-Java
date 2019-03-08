@@ -5,7 +5,7 @@ import java.nio.channels.Channel;
 
 public interface RequestProcessService {
 
-    <R> R process(TransferCommand req);
+    TransferCommand process(TransferCommand req);
 
     /**
      * channel的使用有两种场景，1）发送请求；2）发送响应
